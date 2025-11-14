@@ -11,11 +11,7 @@ public static class EndpointExtensions
         var apiV1 = app.MapGroup("/api/v1")
             .WithTags("API v1")
             .WithOpenApi();
-
-        apiV1.MapGroup("/entities")
-            .WithTags("Entities")
-            .MapEntityEndpoints();
-
+        
         apiV1.MapGroup("/jobs")
             .WithTags("Background Jobs")
             .MapJobEndpoints();
