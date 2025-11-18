@@ -1,18 +1,20 @@
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+using API.Configuration;
 using API.Data;
-using API.Repositories.Interfaces;
-using API.Repositories.Implementations;
-using API.Services.Interfaces;
-using API.Services.Implementations;
-using API.Jobs;
 using API.Endpoints;
+using API.Jobs;
 using API.Models.ThirdParty;
-using API.Models.Shopify;
-using StackExchange.Redis;
+using API.Repositories.Implementations;
+using API.Repositories.Interfaces;
+using API.Services.Implementations;
+using API.Services.Interfaces;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
-using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+
+namespace API;
 
 internal class Program
 {
@@ -26,18 +28,18 @@ internal class Program
 
         // Hangfire Configuration
         builder.Services.AddHangfire(configuration => configuration
-                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-                .UseSimpleAssemblyNameTypeSerializer()
-                .UseRecommendedSerializerSettings()
-                .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")), new PostgreSqlStorageOptions
-                {
-                    QueuePollInterval = TimeSpan.FromSeconds(10),
-                    JobExpirationCheckInterval = TimeSpan.FromHours(1),
-                    CountersAggregateInterval = TimeSpan.FromMinutes(5),
-                    PrepareSchemaIfNecessary = true,
-                    TransactionSynchronisationTimeout = TimeSpan.FromMinutes(5),
-                    SchemaName = "hangfire"
-                }));
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")), new PostgreSqlStorageOptions
+            {
+                QueuePollInterval = TimeSpan.FromSeconds(10),
+                JobExpirationCheckInterval = TimeSpan.FromHours(1),
+                CountersAggregateInterval = TimeSpan.FromMinutes(5),
+                PrepareSchemaIfNecessary = true,
+                TransactionSynchronisationTimeout = TimeSpan.FromMinutes(5),
+                SchemaName = "hangfire"
+            }));
 
         builder.Services.AddHangfireServer(options =>
         {

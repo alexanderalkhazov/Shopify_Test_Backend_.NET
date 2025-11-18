@@ -56,9 +56,9 @@ public class SampleBackgroundJobs
 
             bool success = type.ToLower() switch
             {
-                "error" => await _discordService.SendErrorNotificationAsync(title, message),
-                "success" => await _discordService.SendSuccessNotificationAsync(title, message),
-                _ => await _discordService.SendNotificationAsync(title, message)
+                "error" => await _discordService.SendMessageAsync(message, "traces"),
+                "success" => await _discordService.SendMessageAsync(message, "traces"),
+                _ => await _discordService.SendMessageAsync(message, "traces"),
             };
 
             if (success)
@@ -107,19 +107,13 @@ public class SampleBackgroundJobs
             // Alert if memory usage is high (> 500MB for demo)
             if (memoryInMB > 500)
             {
-                await _discordService.SendErrorNotificationAsync(
-                    "High Memory Usage Alert",
-                    $"Application memory usage is {memoryInMB} MB"
-                );
+               
             }
 
             // Alert if cache is unhealthy
             if (!cacheHealthy)
             {
-                await _discordService.SendErrorNotificationAsync(
-                    "Cache Health Alert",
-                    "Redis cache is not responding properly"
-                );
+                
             }
 
             // Send daily health summary
@@ -129,22 +123,12 @@ public class SampleBackgroundJobs
                 { "Memory Usage", $"{memoryInMB} MB" },
                 { "Uptime", TimeSpan.FromMilliseconds(Environment.TickCount64).ToString(@"dd\.hh\:mm\:ss") }
             };
-
-            await _discordService.SendNotificationAsync(
-                "System Health Report",
-                "Regular system health monitoring report",
-                fields
-            );
-
+            
             _logger.LogInformation("System monitoring with Discord completed");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during system monitoring");
-            await _discordService.SendErrorNotificationAsync(
-                "System Monitoring Failed",
-                $"An error occurred during system monitoring: {ex.Message}"
-            );
             throw;
         }
     }

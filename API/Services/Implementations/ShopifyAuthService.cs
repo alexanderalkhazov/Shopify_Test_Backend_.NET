@@ -1,8 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using API.Configuration;
+using API.Data.Entities;
 using Microsoft.Extensions.Options;
 using API.Models.Shopify;
+using API.Models.Shopify.Models;
 using API.Services.Interfaces;
 using API.Repositories.Interfaces;
 
@@ -16,17 +19,20 @@ public class ShopifyAuthService : IShopifyAuthService
     private readonly ShopifySettings _settings;
     private readonly HttpClient _httpClient;
     private readonly IShopifyRepository _shopifyRepository;
+    private readonly IDiscordService _discordService;
     private readonly ILogger<ShopifyAuthService> _logger;
 
     public ShopifyAuthService(
         IOptions<ShopifySettings> settings,
         HttpClient httpClient,
         IShopifyRepository shopifyRepository,
+        IDiscordService discordService,
         ILogger<ShopifyAuthService> logger)
     {
         _settings = settings.Value;
         _httpClient = httpClient;
         _shopifyRepository = shopifyRepository;
+        _discordService = discordService;
         _logger = logger;
     }
 
@@ -42,7 +48,10 @@ public class ShopifyAuthService : IShopifyAuthService
                   $"&redirect_uri={redirectUri}" +
                   $"&state={state}" +
                   $"&grant_options[]=";
-
+        
+        var discrodMessage = $"GetAuthorizationUrl called for shop: {shopDomain} \nGenerated URL: {url}";
+        this._discordService.SendMessageAsync(discrodMessage, "traces");
+        
         return url;
     }
 
@@ -100,10 +109,11 @@ public class ShopifyAuthService : IShopifyAuthService
         }
     }
 
-    public async Task<ShopifyShop> InstallShopAsync(string shopDomain, string accessToken, string scopes)
+    public async Task<ShopifyShops> InstallShopAsync(string shopDomain, string accessToken, string scopes)
     {
         try
         {
+            this._discordService.SendMessageAsync($"ShopifyAuthService-InstallShopAsync for shop: {shopDomain} with scopes: {scopes}", "traces");
             // Get shop info from Shopify
             var shopInfo = await GetShopInfoAsync(shopDomain, accessToken);
 
@@ -112,6 +122,7 @@ public class ShopifyAuthService : IShopifyAuthService
             
             if (existingShop != null)
             {
+                this._discordService.SendMessageAsync($"Shop already exists {shopDomain}, updating...", "traces");
                 // Update existing shop
                 existingShop.AccessToken = accessToken;
                 existingShop.Scopes = scopes;
@@ -131,12 +142,14 @@ public class ShopifyAuthService : IShopifyAuthService
                 }
 
                 await _shopifyRepository.UpdateShopAsync(existingShop);
+                this._discordService.SendMessageAsync($"{shopDomain} updated in database", "traces");
                 return existingShop;
             }
             else
             {
+                this._discordService.SendMessageAsync($"Shop doesn't exists {shopDomain}, creating new shop...", "traces");
                 // Create new shop
-                var newShop = new ShopifyShop
+                var newShop = new ShopifyShops
                 {
                     ShopDomain = shopDomain,
                     AccessToken = accessToken,
@@ -157,6 +170,7 @@ public class ShopifyAuthService : IShopifyAuthService
                 }
 
                 await _shopifyRepository.AddShopAsync(newShop);
+                this._discordService.SendMessageAsync($"{shopDomain} added in database", "traces");
                 return newShop;
             }
         }

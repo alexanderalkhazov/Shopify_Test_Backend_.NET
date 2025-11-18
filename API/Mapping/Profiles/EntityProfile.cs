@@ -1,3 +1,4 @@
+using API.Data.Tables;
 using AutoMapper;
 using API.Models;
 using API.Models.DTOs;

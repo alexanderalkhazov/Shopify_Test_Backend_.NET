@@ -1,3 +1,4 @@
+using API.Data.Tables;
 using API.Models;
 
 namespace API.Repositories.Interfaces;

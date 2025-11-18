@@ -1,4 +1,6 @@
+using API.Data.Entities;
 using API.Models.Shopify;
+using API.Models.Shopify.Models;
 
 namespace API.Services.Interfaces;
 
@@ -25,7 +27,7 @@ public interface IShopifyAuthService
     /// <summary>
     /// Install shop and store access token
     /// </summary>
-    Task<ShopifyShop> InstallShopAsync(string shopDomain, string accessToken, string scopes);
+    Task<ShopifyShops> InstallShopAsync(string shopDomain, string accessToken, string scopes);
 
     /// <summary>
     /// Get shop information from Shopify API
@@ -89,6 +91,16 @@ public interface IShopifyWebhookService
 /// </summary>
 public interface IShopifyApiService
 {
+    /// <summary>
+    /// Get all location IDs from shop
+    /// </summary>
+    Task<List<int>> GetStoreLocationsAsync(string shopDomain, string accessToken);
+
+    /// <summary>
+    /// Get location details by ID
+    /// </summary>
+    Task<ShopifyLocation?> GetLocationByIdAsync(string shopDomain, string accessToken, long locationId);
+
     /// <summary>
     /// Get products from shop
     /// </summary>

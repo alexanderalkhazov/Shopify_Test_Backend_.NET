@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using API.Configuration;
+using API.Data.Entities;
 using Microsoft.Extensions.Options;
 using API.Models.Shopify;
 using API.Services.Interfaces;
@@ -188,10 +190,10 @@ public class ShopifyWebhookService : IShopifyWebhookService
             _logger.LogError(ex, "Error processing webhook {Topic} for shop {ShopDomain}", topic, shopDomain);
             
             // Send error notification to Discord
-            await _discordService.SendErrorNotificationAsync(
-                $"Webhook Processing Error - {topic}",
-                $"Failed to process webhook for shop {shopDomain}: {ex.Message}"
-            );
+            // await _discordService.SendErrorNotificationAsync(
+            //     $"Webhook Processing Error - {topic}",
+            //     $"Failed to process webhook for shop {shopDomain}: {ex.Message}"
+            // );
             
             throw;
         }
@@ -239,11 +241,11 @@ public class ShopifyWebhookService : IShopifyWebhookService
                 _ => $"Order event ({topic}) in {shopDomain}"
             };
 
-            await _discordService.SendNotificationAsync(
-                $"Shopify Order Event - {topic}",
-                message,
-                fields
-            );
+            // await _discordService.SendNotificationAsync(
+            //     $"Shopify Order Event - {topic}",
+            //     message,
+            //     fields
+            // );
 
             _logger.LogInformation("Handled order webhook {Topic} for order {OrderId} in shop {ShopDomain}", 
                 topic, order.Id, shopDomain);
@@ -276,11 +278,11 @@ public class ShopifyWebhookService : IShopifyWebhookService
                 _ => $"Product event ({topic}) in {shopDomain}"
             };
 
-            await _discordService.SendNotificationAsync(
-                $"Shopify Product Event - {topic}",
-                message,
-                fields
-            );
+            // await _discordService.SendNotificationAsync(
+            //     $"Shopify Product Event - {topic}",
+            //     message,
+            //     fields
+            // );
 
             _logger.LogInformation("Handled product webhook {Topic} for product {ProductId} in shop {ShopDomain}", 
                 topic, product.Id, shopDomain);
@@ -307,10 +309,10 @@ public class ShopifyWebhookService : IShopifyWebhookService
                 await _shopifyRepository.UpdateShopAsync(shop);
 
                 // Send notification
-                await _discordService.SendErrorNotificationAsync(
-                    "Shopify App Uninstalled",
-                    $"Shop {shopDomain} has uninstalled the app"
-                );
+                // await _discordService.SendErrorNotificationAsync(
+                //     "Shopify App Uninstalled",
+                //     $"Shop {shopDomain} has uninstalled the app"
+                // );
 
                 _logger.LogInformation("App uninstalled for shop {ShopDomain}", shopDomain);
             }

@@ -1,7 +1,9 @@
 using System.Text;
 using System.Text.Json;
+using API.Configuration;
 using Microsoft.Extensions.Options;
 using API.Models.Shopify;
+using API.Models.Shopify.Models;
 using API.Services.Interfaces;
 
 namespace API.Services.Implementations;
@@ -25,14 +27,72 @@ public class ShopifyApiService : IShopifyApiService
         _logger = logger;
     }
 
+    public async Task<List<int>> GetStoreLocationsAsync(string shopDomain, string accessToken)
+    {
+        try
+        {
+            var response = await MakeApiRequestAsync<JsonElement>(
+                shopDomain,
+                accessToken,
+                $"locations.json",
+                HttpMethod.Get);
+
+            if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("locations", out var locationsElement))
+            {
+                var locations = new List<int>();
+
+                foreach (var location in locationsElement.EnumerateArray())
+                {
+                    if (location.TryGetProperty("id", out var idElement))
+                    {
+                        locations.Add((int)idElement.GetInt64());
+                    }
+                }
+
+                return locations;
+            }
+
+            return new List<int>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting locations for shop {ShopDomain}", shopDomain);
+            throw;
+        }
+    }
+
+    public async Task<ShopifyLocation?> GetLocationByIdAsync(string shopDomain, string accessToken, long locationId)
+    {
+        try
+        {
+            var response = await MakeApiRequestAsync<JsonElement>(
+                shopDomain,
+                accessToken,
+                $"locations/{locationId}.json",
+                HttpMethod.Get);
+
+            if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("location", out var locationElement))
+            {
+                return JsonSerializer.Deserialize<ShopifyLocation>(locationElement.GetRawText());
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting location {LocationId} for shop {ShopDomain}", locationId, shopDomain);
+            throw;
+        }
+    }
+
     public async Task<List<ShopifyProductWebhook>> GetProductsAsync(string shopDomain, string accessToken, int limit = 50)
     {
         try
         {
             var response = await MakeApiRequestAsync<JsonElement>(
-                shopDomain, 
-                accessToken, 
-                $"products.json?limit={limit}", 
+                shopDomain,
+                accessToken,
+                $"products.json?limit={limit}",
                 HttpMethod.Get);
 
             if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("products", out var productsElement))
@@ -55,9 +115,9 @@ public class ShopifyApiService : IShopifyApiService
         try
         {
             var response = await MakeApiRequestAsync<JsonElement>(
-                shopDomain, 
-                accessToken, 
-                $"orders.json?limit={limit}", 
+                shopDomain,
+                accessToken,
+                $"orders.json?limit={limit}",
                 HttpMethod.Get);
 
             if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("orders", out var ordersElement))
@@ -80,10 +140,10 @@ public class ShopifyApiService : IShopifyApiService
         try
         {
             var response = await MakeApiRequestAsync<JsonElement>(
-                shopDomain, 
-                accessToken, 
-                "products.json", 
-                HttpMethod.Post, 
+                shopDomain,
+                accessToken,
+                "products.json",
+                HttpMethod.Post,
                 new { product = productData });
 
             if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("product", out var productElement))
@@ -105,10 +165,10 @@ public class ShopifyApiService : IShopifyApiService
         try
         {
             var response = await MakeApiRequestAsync<JsonElement>(
-                shopDomain, 
-                accessToken, 
-                $"products/{productId}.json", 
-                HttpMethod.Put, 
+                shopDomain,
+                accessToken,
+                $"products/{productId}.json",
+                HttpMethod.Put,
                 new { product = productData });
 
             if (response.ValueKind != JsonValueKind.Undefined && response.TryGetProperty("product", out var productElement))
@@ -130,9 +190,9 @@ public class ShopifyApiService : IShopifyApiService
         try
         {
             var response = await MakeApiRequestAsync<ShopifyShopInfo>(
-                shopDomain, 
-                accessToken, 
-                "shop.json", 
+                shopDomain,
+                accessToken,
+                "shop.json",
                 HttpMethod.Get);
 
             return response;
@@ -149,7 +209,7 @@ public class ShopifyApiService : IShopifyApiService
         try
         {
             var url = $"https://{shopDomain}/admin/api/{_settings.ApiVersion}/{endpoint}";
-            
+
             var request = new HttpRequestMessage(method, url);
             request.Headers.Add("X-Shopify-Access-Token", accessToken);
 
@@ -164,21 +224,21 @@ public class ShopifyApiService : IShopifyApiService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                
+
                 if (typeof(T) == typeof(JsonElement))
                 {
                     var jsonDocument = JsonDocument.Parse(content);
                     return (T)(object)jsonDocument.RootElement;
                 }
-                
+
                 return JsonSerializer.Deserialize<T>(content) ?? default(T);
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Shopify API request failed. Status: {StatusCode}, Content: {Content}", 
+                _logger.LogError("Shopify API request failed. Status: {StatusCode}, Content: {Content}",
                     response.StatusCode, errorContent);
-                
+
                 return default(T);
             }
         }

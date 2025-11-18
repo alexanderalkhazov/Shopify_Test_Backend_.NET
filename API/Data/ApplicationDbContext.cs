@@ -1,3 +1,5 @@
+using API.Data.Entities;
+using API.Data.Tables;
 using Microsoft.EntityFrameworkCore;
 using API.Models;
 using API.Models.Shopify;
@@ -11,7 +13,7 @@ public class ApplicationDbContext : DbContext
 
     }
     public DbSet<Entity> Entities { get; set; }
-    public DbSet<ShopifyShop> ShopifyShops { get; set; }
+    public DbSet<ShopifyShops> ShopifyShops { get; set; }
     public DbSet<ShopifyWebhook> ShopifyWebhooks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,7 +44,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // Shopify entities configuration
-        modelBuilder.Entity<ShopifyShop>(entity =>
+        modelBuilder.Entity<ShopifyShops>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.ShopDomain).IsUnique();

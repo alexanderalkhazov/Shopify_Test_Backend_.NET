@@ -1,19 +1,5 @@
 namespace API.Models.ThirdParty;
 
-/// <summary>
-/// Discord webhook configuration settings
-/// </summary>
-public class DiscordSettings
-{
-    public string WebhookUrl { get; set; } = string.Empty;
-    public string BotName { get; set; } = "Backend API";
-    public string AvatarUrl { get; set; } = string.Empty;
-    public bool Enabled { get; set; } = true;
-}
-
-/// <summary>
-/// Discord webhook message payload
-/// </summary>
 public class DiscordWebhookMessage
 {
     public string Content { get; set; } = string.Empty;
@@ -22,9 +8,6 @@ public class DiscordWebhookMessage
     public List<DiscordEmbed> Embeds { get; set; } = new();
 }
 
-/// <summary>
-/// Discord embed for rich messages
-/// </summary>
 public class DiscordEmbed
 {
     public string Title { get; set; } = string.Empty;
@@ -35,9 +18,6 @@ public class DiscordEmbed
     public string Timestamp { get; set; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 }
 
-/// <summary>
-/// Discord embed field
-/// </summary>
 public class DiscordField
 {
     public string Name { get; set; } = string.Empty;
@@ -45,9 +25,6 @@ public class DiscordField
     public bool Inline { get; set; } = false;
 }
 
-/// <summary>
-/// Discord embed footer
-/// </summary>
 public class DiscordFooter
 {
     public string Text { get; set; } = string.Empty;

@@ -1,3 +1,4 @@
+using API.Data.Entities;
 using API.Models.Shopify;
 
 namespace API.Repositories.Interfaces;
@@ -8,12 +9,12 @@ namespace API.Repositories.Interfaces;
 public interface IShopifyRepository
 {
     // Shop management
-    Task<ShopifyShop?> GetShopByDomainAsync(string shopDomain);
-    Task<ShopifyShop?> GetShopByIdAsync(int shopId);
-    Task<List<ShopifyShop>> GetActiveShopsAsync();
-    Task<List<ShopifyShop>> GetAllShopsAsync();
-    Task AddShopAsync(ShopifyShop shop);
-    Task UpdateShopAsync(ShopifyShop shop);
+    Task<ShopifyShops?> GetShopByDomainAsync(string shopDomain);
+    Task<ShopifyShops?> GetShopByIdAsync(int shopId);
+    Task<List<ShopifyShops>> GetActiveShopsAsync();
+    Task<List<ShopifyShops>> GetAllShopsAsync();
+    Task AddShopAsync(ShopifyShops shop);
+    Task UpdateShopAsync(ShopifyShops shop);
     Task DeleteShopAsync(int shopId);
 
     // Webhook management
@@ -26,6 +27,6 @@ public interface IShopifyRepository
 
     // Analytics and reporting
     Task<int> GetActiveShopCountAsync();
-    Task<List<ShopifyShop>> GetRecentInstallationsAsync(int days = 30);
-    Task<List<ShopifyShop>> GetShopsWithoutWebhooksAsync();
+    Task<List<ShopifyShops>> GetRecentInstallationsAsync(int days = 30);
+    Task<List<ShopifyShops>> GetShopsWithoutWebhooksAsync();
 }

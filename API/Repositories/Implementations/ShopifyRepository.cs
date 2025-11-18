@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using API.Data;
+using API.Data.Entities;
 using API.Models.Shopify;
 using API.Repositories.Interfaces;
 
@@ -18,21 +19,21 @@ public class ShopifyRepository : IShopifyRepository
     }
 
     // Shop management
-    public async Task<ShopifyShop?> GetShopByDomainAsync(string shopDomain)
+    public async Task<ShopifyShops?> GetShopByDomainAsync(string shopDomain)
     {
         return await _context.ShopifyShops
             .Include(s => s.Webhooks)
             .FirstOrDefaultAsync(s => s.ShopDomain == shopDomain);
     }
 
-    public async Task<ShopifyShop?> GetShopByIdAsync(int shopId)
+    public async Task<ShopifyShops?> GetShopByIdAsync(int shopId)
     {
         return await _context.ShopifyShops
             .Include(s => s.Webhooks)
             .FirstOrDefaultAsync(s => s.Id == shopId);
     }
 
-    public async Task<List<ShopifyShop>> GetActiveShopsAsync()
+    public async Task<List<ShopifyShops>> GetActiveShopsAsync()
     {
         return await _context.ShopifyShops
             .Where(s => s.IsActive)
@@ -40,20 +41,20 @@ public class ShopifyRepository : IShopifyRepository
             .ToListAsync();
     }
 
-    public async Task<List<ShopifyShop>> GetAllShopsAsync()
+    public async Task<List<ShopifyShops>> GetAllShopsAsync()
     {
         return await _context.ShopifyShops
             .OrderBy(s => s.ShopDomain)
             .ToListAsync();
     }
 
-    public async Task AddShopAsync(ShopifyShop shop)
+    public async Task AddShopAsync(ShopifyShops shop)
     {
         await _context.ShopifyShops.AddAsync(shop);
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateShopAsync(ShopifyShop shop)
+    public async Task UpdateShopAsync(ShopifyShops shop)
     {
         shop.UpdatedAt = DateTime.UtcNow;
         _context.ShopifyShops.Update(shop);
@@ -129,7 +130,7 @@ public class ShopifyRepository : IShopifyRepository
             .CountAsync(s => s.IsActive);
     }
 
-    public async Task<List<ShopifyShop>> GetRecentInstallationsAsync(int days = 30)
+    public async Task<List<ShopifyShops>> GetRecentInstallationsAsync(int days = 30)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-days);
         
@@ -139,7 +140,7 @@ public class ShopifyRepository : IShopifyRepository
             .ToListAsync();
     }
 
-    public async Task<List<ShopifyShop>> GetShopsWithoutWebhooksAsync()
+    public async Task<List<ShopifyShops>> GetShopsWithoutWebhooksAsync()
     {
         return await _context.ShopifyShops
             .Where(s => s.IsActive && !s.WebhooksConfigured)

@@ -32,11 +32,11 @@ public static class ShopifyEndpoints
 
                 // Normalize shop domain
                 var shopDomain = shop.Contains(".myshopify.com") ? shop : $"{shop}.myshopify.com";
-                
+
                 var authUrl = authService.GetAuthorizationUrl(shopDomain, state ?? "");
-                
-                return Results.Ok(new 
-                { 
+
+                return Results.Ok(new
+                {
                     authUrl,
                     shopDomain,
                     message = "Redirect user to this URL to begin OAuth flow"
@@ -71,7 +71,7 @@ public static class ShopifyEndpoints
 
                 // Exchange code for access token
                 var tokenResponse = await authService.ExchangeCodeForTokenAsync(shopDomain, code);
-                
+
                 if (tokenResponse == null)
                 {
                     return Results.BadRequest(new { error = "Failed to exchange code for access token" });
@@ -152,7 +152,7 @@ public static class ShopifyEndpoints
             try
             {
                 var shops = await shopifyRepository.GetActiveShopsAsync();
-                
+
                 var shopsData = shops.Select(s => new
                 {
                     id = s.Id,
@@ -180,6 +180,65 @@ public static class ShopifyEndpoints
         .WithSummary("Get all installed shops")
         .WithDescription("Retrieve list of all installed Shopify shops");
 
+        group.MapGet("/locations/{shopDomain}", async (
+            string shopDomain,
+            IShopifyRepository shopifyRepository,
+            IShopifyApiService apiService) =>
+        {
+            try
+            {
+                var shop = await shopifyRepository.GetShopByDomainAsync(shopDomain);
+                if (shop == null || !shop.IsActive)
+                {
+                    return Results.NotFound(new { error = "Shop not found or inactive" });
+                }
+
+                var locations = await apiService.GetStoreLocationsAsync(shopDomain, shop.AccessToken);
+
+                return Results.Ok(new { locations, count = locations.Count });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem($"Error getting locations: {ex.Message}");
+            }
+        })
+        .WithName("GetShopLocations")
+        .WithSummary("Get all locations from shop")
+        .WithDescription("Retrieve active locations from a specific Shopify shop");
+
+        group.MapGet("/locations/{shopDomain}/{locationId}", async (
+            string shopDomain,
+            long locationId,
+            IShopifyRepository shopifyRepository,
+            IShopifyApiService apiService) =>
+        {
+            try
+            {
+                var shop = await shopifyRepository.GetShopByDomainAsync(shopDomain);
+                if (shop == null || !shop.IsActive)
+                {
+                    return Results.NotFound(new { error = "Shop not found or inactive" });
+                }
+
+                var location = await apiService.GetLocationByIdAsync(shopDomain, shop.AccessToken, locationId);
+
+                if (location == null)
+                {
+                    return Results.NotFound(new { error = "Location not found" });
+                }
+
+                return Results.Ok(new { location });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem($"Error getting location: {ex.Message}");
+            }
+        })
+        .WithName("GetShopLocationById")
+        .WithSummary("Get location details by ID")
+        .WithDescription("Retrieve detailed information for a specific location from a Shopify shop");
+
+
         group.MapGet("/shops/{shopDomain}/products", async (
             string shopDomain,
             [FromQuery] int limit,
@@ -195,7 +254,7 @@ public static class ShopifyEndpoints
                 }
 
                 var products = await apiService.GetProductsAsync(shopDomain, shop.AccessToken, limit > 0 ? limit : 50);
-                
+
                 return Results.Ok(new { products, count = products.Count });
             }
             catch (Exception ex)
@@ -222,7 +281,7 @@ public static class ShopifyEndpoints
                 }
 
                 var orders = await apiService.GetOrdersAsync(shopDomain, shop.AccessToken, limit > 0 ? limit : 50);
-                
+
                 return Results.Ok(new { orders, count = orders.Count });
             }
             catch (Exception ex)
@@ -248,9 +307,9 @@ public static class ShopifyEndpoints
                 }
 
                 var success = await webhookService.CreateRequiredWebhooksAsync(shopDomain, shop.AccessToken);
-                
-                return Results.Ok(new 
-                { 
+
+                return Results.Ok(new
+                {
                     success,
                     message = success ? "Webhooks configured successfully" : "Some webhooks failed to configure"
                 });
